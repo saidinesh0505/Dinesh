@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="b7d0baeb-4592-4361-9e1e-05e20df3d6f9" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<flow name="t5Flow" doc:id="74efb100-59c9-4779-af5c-e84a3c62560b" >
+		<http:listener doc:name="Listener" doc:id="3fb32051-b35b-4f40-b6f7-687e057e7738" config-ref="HTTP_Listener_config1" path="/test1"/>
+		<choice doc:name="Choice" doc:id="06d44573-208e-4a80-83b9-bcc63a07cec3" >
+			<when expression='#[payload.^mediaType=="application/xml; charset=UTF-8"]'>
+				<ee:transform doc:name="Transform Message" doc:id="4132d359-ac9b-4bae-974a-4ed8be6d147b">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"hi"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<ee:transform doc:name="Transform Message" doc:id="2e9f20e8-9463-4e5f-ba32-d13fb2df3ba6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "EmpId": 1.0,
+  "EmpName": "john",
+  "Business": "Mulesoft",
+  "Region": "US",
+  "Salary": "250000",
+  "Supervisor": "Samson",
+  "CarreerLevel": "L8",
+  "DOJ": 22042012
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="00c923cb-aad9-4eec-aa5b-a165ce5723eb">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"h"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<ee:transform doc:name="Transform Message" doc:id="b0c6ddc3-3a87-4689-8dee-1ea84bfdd4a6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+{EmpId:payload.EmpId,EmpName:payload.EmpName,Business:payload.Business,Region:payload.Region,Salary:payload.Salary,Supervisor:payload.Supervisor,CarreerLevel:payload.CarreerLevel,DOJ:payload.DOJ}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

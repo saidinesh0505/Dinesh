@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="67796db8-56a2-4d28-b13f-de2c5f968dc9" >
+		<file:connection workingDir="C:\Users\sai.dinesh.k.puppala\OneDrive - Accenture\Desktop\mule soft\APStart_studentFiles_SP_13oct2023" />
+	</file:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f2a144e6-8b91-4f14-beee-5f2fa147e9b7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="d5Flow" doc:id="db5f5462-fc9e-471e-bb9f-1cd075aec989" >
+		<http:listener doc:name="Listener" doc:id="0aac2acb-85b2-467e-b746-0fb0c04f3369" config-ref="HTTP_Listener_config" path="/test"/>
+		<file:read doc:name="Read" doc:id="7b3712b6-cf94-44b0-b5e5-ed8707a0cd50" config-ref="File_Config" path="C:\Users\sai.dinesh.k.puppala\OneDrive - Accenture\Desktop\mule soft\PayrollRecord_04272021120000.xlsm" outputMimeType="application/xlsx"/>
+		<ee:transform doc:name="Transform Message" doc:id="17199be7-68ad-482d-83af-669bd22ec19a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.PayrollRecord_04272021120000]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="d5Batch_Job" doc:id="a4754e3f-6b96-48a2-9fc8-f90414698947">
+			<batch:process-records>
+				<batch:step name="Batch_Step" doc:id="8824fd1f-4809-43b9-ae36-317d07e1ed75">
+							<choice doc:name="Choice" doc:id="bb5af756-e150-47f7-ab9c-39bf5b73b71e">
+								<when expression='#[payload.Region=="US"]'>
+									<ee:transform doc:name="Transform Message" doc:id="69f4c896-7012-4ae3-afa6-6d3a04648233">
+										<ee:message>
+											<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+{EmpId:payload.EmpId,EmpName:payload.EmpName,Business:payload.Business,Region:payload.Region,Salary:payload.Salary,Supervisor:payload.Supervisor,CarreerLevel:payload.CarreerLevel,DOJ:payload.DOJ}]]></ee:set-payload>
+										</ee:message>
+									</ee:transform>
+							<file:write doc:name="Write" doc:id="10b69ba6-8031-4fcf-b639-b856a0cb0f56" config-ref="File_Config" path="C:\Users\sai.dinesh.k.puppala\OneDrive - Accenture\Desktop\mule soft\USPayrollRecord_042720211200002.csv" mode="APPEND"/>
+								</when>
+								<otherwise>
+									<ee:transform doc:name="Transform Message" doc:id="574b586a-c9ee-4dfc-b9d3-ee3e344ada9e">
+										<ee:message>
+											<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+{EmpId:payload.EmpId,EmpName:payload.EmpName,Business:payload.Business,Region:payload.Region,Salary:payload.Salary,Supervisor:payload.Supervisor,CarreerLevel:payload.CarreerLevel,DOJ:payload.DOJ}]]></ee:set-payload>
+										</ee:message>
+									</ee:transform>
+							<file:write doc:name="Write" doc:id="205d46be-27ff-4c85-bbeb-4367637131f5" config-ref="File_Config" path="C:\Users\sai.dinesh.k.puppala\OneDrive - Accenture\Desktop\mule soft\USPayrollRecord_042720211200003.csv" mode="APPEND"/>
+								</otherwise>
+							</choice>
+						</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+</mule>
